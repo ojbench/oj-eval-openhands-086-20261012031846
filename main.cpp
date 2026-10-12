@@ -28,19 +28,6 @@ void swapChildren(TreeNode* node) {
     node->right = temp;
 }
 
-// Function to get nodes at a specific depth
-void getNodesAtDepth(TreeNode* root, int targetDepth, int currentDepth, vector<TreeNode*>& nodes) {
-    if (root == nullptr) return;
-    
-    if (currentDepth == targetDepth) {
-        nodes.push_back(root);
-        return;
-    }
-    
-    getNodesAtDepth(root->left, targetDepth, currentDepth + 1, nodes);
-    getNodesAtDepth(root->right, targetDepth, currentDepth + 1, nodes);
-}
-
 int main() {
     int n;
     cin >> n;
@@ -64,6 +51,40 @@ int main() {
         }
     }
     
+    // Precompute depth of each node and group nodes by depth
+    vector<int> depth(n + 1, 0);
+    vector<vector<TreeNode*>> nodesAtDepth(n + 1);  // nodesAtDepth[i] contains all nodes at depth i
+    
+    // BFS to compute depths and group nodes
+    queue<TreeNode*> q;
+    q.push(nodes[1]);
+    depth[1] = 1;
+    nodesAtDepth[1].push_back(nodes[1]);
+    
+    while (!q.empty()) {
+        TreeNode* curr = q.front();
+        q.pop();
+        
+        // Get the index of current node (value is the index)
+        int idx = curr->val;
+        
+        // Process left child
+        if (curr->left != nullptr) {
+            int leftIdx = curr->left->val;
+            depth[leftIdx] = depth[idx] + 1;
+            nodesAtDepth[depth[leftIdx]].push_back(curr->left);
+            q.push(curr->left);
+        }
+        
+        // Process right child
+        if (curr->right != nullptr) {
+            int rightIdx = curr->right->val;
+            depth[rightIdx] = depth[idx] + 1;
+            nodesAtDepth[depth[rightIdx]].push_back(curr->right);
+            q.push(curr->right);
+        }
+    }
+    
     int t;
     cin >> t;
     
@@ -73,12 +94,9 @@ int main() {
         cin >> k;
         
         // Find all nodes at depths that are multiples of k
-        for (int depth = k; depth <= n; depth += k) {
-            vector<TreeNode*> nodesAtDepth;
-            getNodesAtDepth(nodes[1], depth, 1, nodesAtDepth);
-            
+        for (int depthLevel = k; depthLevel <= n; depthLevel += k) {
             // Swap children for each node at this depth
-            for (TreeNode* node : nodesAtDepth) {
+            for (TreeNode* node : nodesAtDepth[depthLevel]) {
                 swapChildren(node);
             }
         }
